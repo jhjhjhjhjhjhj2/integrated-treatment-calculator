@@ -233,6 +233,14 @@
             내역서 횟수 기반 추정 규칙: 기본(1시간) 1회 + 유지(15분) 8회면 3시간 이상, 기본 1회 + 유지 20회면 6시간 이상으로 표기합니다.
             조건이 안 맞으면 0원으로 표시하고 사유를 표에 같이 적습니다.
           </div>
+
+          <!-- 마취 계산 적용 버튼 -->
+          <div class="row" style="margin-top:10px;">
+            <div class="col xs" style="min-width:220px;">
+              <button class="good" id="btnAnesApply" type="button">마취 계산 적용</button>
+            </div>
+          </div>
+
           <div class="anesGrid" id="anesGrid"></div>
           <div class="warn" id="anesWarnBox"></div>
         </div>
@@ -1040,6 +1048,7 @@ const DATA_TREAT_TSV =
 상해통합치료비	상해통합치료 (진단)	통합상해진단(중증)	기타	부위별 각각 연간1회한	여러 신체부위를 침범한 외상성 절단	T05(분류번호)	50만원	100만원	200만원
 상해통합치료비	상해통합치료 (진단)	통합상해진단(중증)	기타	부위별 각각 연간1회한	여러 신체부위를 침범한 으깸손상	T04(분류번호)	50만원	100만원	200만원
 상해통합치료비	상해통합치료 (진단)	통합상해진단(중증)	몸통	부위별 각각 연간1회한	흉부의 으깸손상 및 흉부 부분의 외상성 절단	S28(분류번호)	50만원	100만원	200만원
+
 
 `;
 
@@ -3766,6 +3775,7 @@ _개두술(Craniotomy)을 수반하는 것"	5종
 히크만카테터(히크만도관, 히크만 Cath) 삽입술(백혈병 의외의 암)	2종
 히크만카테터(히크만도관, 히크만 Cath) 삽입술(백혈병인 경우)	3종
 
+
 `;
 
 /* =========================
@@ -3874,10 +3884,8 @@ function isAnesText(s){
 }
 
 /*
-  사용자 예시 기준:
-  - 3시간 이상: 기본 1회 + 유지 8회 이상 (15분 * 8 = 2시간)
-  - 6시간 이상: 기본 1회 + 유지 20회 이상 (15분 * 20 = 5시간)
-  삽관 트랙(1211 + 1231/1221) 또는 마스크 트랙(1212 + 1232/1222) 중 하나라도 충족하면 OK
+  - 3시간 이상: 기본 1회 + 유지 8회 이상
+  - 6시간 이상: 기본 1회 + 유지 20회 이상
 */
 function analyzeAnesQty(qtyMap){
   const q = (code)=>Math.max(0, Math.floor(Number(qtyMap[code] || 0)));
@@ -4768,26 +4776,46 @@ $("#query").addEventListener("focus", (e)=>{ showAutocomplete(e.target.value); }
 $("#query").addEventListener("blur", ()=>{ setTimeout(hideAutocomplete, 120); });
 
 /* =========================
-   마취 섹션 토글
+   마취 섹션 토글 (정렬 유지: 열 때마다 renderAnesInputs 재생성)
    ========================= */
 function setAnesPanel(open){
   $("#anesPanel").classList.toggle("on", !!open);
 }
+
 $("#chkAnes").addEventListener("change", (e)=>{
   const on = e.target.checked;
   setAnesPanel(on);
+
+  // 열릴 때마다 입력 UI를 다시 생성해서 정렬 고정
+  if(on) renderAnesInputs();
+
   upsertAnesCart();
 });
 
 $("#btnAnesOpen").addEventListener("click", ()=>{
   $("#chkAnes").checked = true;
   setAnesPanel(true);
+
+  // 버튼으로 열어도 항상 다시 생성
+  renderAnesInputs();
+
   upsertAnesCart();
 });
+
 $("#btnAnesReset").addEventListener("click", ()=>{
   $("#chkAnes").checked = true;
   setAnesPanel(true);
+
+  // 초기화도 UI 다시 생성 후 값 리셋
+  renderAnesInputs();
   resetAnesInputs();
+});
+
+/* 마취 계산 적용 버튼 */
+$("#btnAnesApply").addEventListener("click", ()=>{
+  $("#chkAnes").checked = true;
+  setAnesPanel(true);
+  upsertAnesCart();
 });
 
 /* =========================
