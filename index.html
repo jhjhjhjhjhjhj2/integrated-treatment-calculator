@@ -110,6 +110,89 @@
     font-size:12px; line-height:1.45;
     display:none; white-space:pre-line;
   }
+
+  /* ===== 마취 섹션(접기/펼치기) UX ===== */
+  .anesBox{
+    border:1px solid rgba(37,99,235,0.16);
+    background: linear-gradient(180deg, rgba(37,99,235,0.07), rgba(37,99,235,0.03));
+    border-radius:18px;
+    padding:12px;
+    margin-bottom:12px;
+  }
+  .anesTopRow{
+    display:flex; gap:10px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+  }
+  .anesToggle{
+    display:flex; gap:10px; align-items:flex-start;
+    padding:10px 12px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    max-width:760px;
+    flex:1;
+  }
+  .anesToggle input{ width:auto; margin-top:3px; }
+  .anesTitle{ font-weight:950; font-size:13px; }
+  .anesDesc{ margin-top:4px; font-size:12px; color:var(--muted); font-weight:800; line-height:1.35; }
+  .anesRightBtns{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .anesMiniBtn{
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    font-weight:950;
+  }
+
+  .anesPanel{ display:none; margin-top:12px; }
+  .anesPanel.on{ display:block; }
+
+  .anesGrid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+    margin-top:10px;
+  }
+  @media (max-width:640px){ .anesGrid{ grid-template-columns:1fr; } }
+  .anesItem{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:10px;
+  }
+  .anesHeader{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    margin-bottom:8px;
+  }
+  .anesCode{ font-weight:950; font-size:13px; }
+  .anesRole{
+    font-size:11px;
+    font-weight:950;
+    color:var(--muted);
+    border:1px solid var(--line);
+    padding:2px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+    background:#fff;
+  }
+  .anesName{
+    margin-top:4px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:800;
+    line-height:1.35;
+  }
+  .anesHint{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px dashed rgba(2,132,199,0.25);
+    background: rgba(2,132,199,0.06);
+    color:#0c4a6e;
+    font-size:12px;
+    line-height:1.45;
+    font-weight:800;
+  }
 </style>
 </head>
 <body>
@@ -124,6 +207,38 @@
 
   <div class="grid">
     <div class="card">
+
+      <!-- 마취 섹션(접기/펼치기) -->
+      <div class="anesBox">
+        <div class="anesTopRow">
+          <label class="anesToggle" style="margin:0;">
+            <input type="checkbox" id="chkAnes" />
+            <div>
+              <div class="anesTitle">마취 코드가 내역서에 있어요 (선택)</div>
+              <div class="anesDesc">
+                진료비세부내역서에 L1211, L1231 같은 마취 코드가 찍혀 있으면 체크해서 입력칸을 열어주세요.
+                입력한 횟수는 아래 "입력한 내용" 표에 자동으로 적용됩니다.
+              </div>
+            </div>
+          </label>
+
+          <div class="anesRightBtns">
+            <button class="anesMiniBtn" id="btnAnesOpen" type="button">마취 입력 열기</button>
+            <button class="anesMiniBtn danger" id="btnAnesReset" type="button">마취 입력 초기화</button>
+          </div>
+        </div>
+
+        <div id="anesPanel" class="anesPanel">
+          <div class="anesHint">
+            내역서 횟수 기반 추정 규칙: 기본(1시간) 1회 + 유지(15분) 8회면 3시간 이상, 기본 1회 + 유지 20회면 6시간 이상으로 표기합니다.
+            조건이 안 맞으면 0원으로 표시하고 사유를 표에 같이 적습니다.
+          </div>
+          <div class="anesGrid" id="anesGrid"></div>
+          <div class="warn" id="anesWarnBox"></div>
+        </div>
+      </div>
+
+      <!-- 통합치료비 입력 (기존 그대로) -->
       <div class="row">
         <div class="col sm">
           <label>원인</label>
@@ -157,8 +272,8 @@
         <div class="col xs" style="min-width:240px;">
           <label>작업</label>
           <div class="btnsTop">
-            <button class="danger" id="btnClear">전체 삭제</button>
-            <button class="primary" id="btnCalc">계산</button>
+            <button class="danger" id="btnClear" type="button">전체 삭제</button>
+            <button class="primary" id="btnCalc" type="button">계산</button>
           </div>
         </div>
       </div>
@@ -174,13 +289,14 @@
 
         <div class="col xs">
           <label>추가</label>
-          <button class="good" id="btnAdd">선택 항목 추가</button>
+          <button class="good" id="btnAdd" type="button">선택 항목 추가</button>
         </div>
       </div>
 
       <div class="warn" id="warnBox"></div>
     </div>
 
+    <!-- 결과 카드 -->
     <div class="card">
       <div class="kpis">
         <div class="kpi">
@@ -925,12 +1041,9 @@ const DATA_TREAT_TSV =
 상해통합치료비	상해통합치료 (진단)	통합상해진단(중증)	기타	부위별 각각 연간1회한	여러 신체부위를 침범한 으깸손상	T04(분류번호)	50만원	100만원	200만원
 상해통합치료비	상해통합치료 (진단)	통합상해진단(중증)	몸통	부위별 각각 연간1회한	흉부의 으깸손상 및 흉부 부분의 외상성 절단	S28(분류번호)	50만원	100만원	200만원
 
-
-
 `;
 
-const DATA_SURG_TSV =
-`
+const DATA_SURG_TSV = `
 A1 활차절개술(유리술)	1종
 AVF 동정맥루수술	3종
 Bankart 병변 봉합술	2종
@@ -3674,8 +3787,6 @@ function normKey(s){
 function splitLines(text){
   return safeStr(text).replace(/\r/g,"").split("\n").map(s=>s.trim()).filter(Boolean);
 }
-
-// CSV/TSV: 탭 우선, 콤마는 쌍따옴표 내부 보호
 function splitRow(line){
   if(line.includes("\t")) return line.split("\t").map(s=>safeStr(s).trim());
 
@@ -3692,7 +3803,6 @@ function splitRow(line){
   result.push(current);
   return result.map(s => safeStr(s).replace(/^"|"$/g, "").trim());
 }
-
 function parseMoneyToWon(v){
   const s = safeStr(v).trim();
   if(!s) return 0;
@@ -3732,6 +3842,79 @@ function showWarn(lines){
   box.style.display = "block";
   box.textContent = lines.map(s=>"• " + s).join("\n");
 }
+function showAnesWarn(lines){
+  const box = $("#anesWarnBox");
+  if(!box) return;
+  if(!lines || !lines.length){
+    box.style.display = "none";
+    box.textContent = "";
+    return;
+  }
+  box.style.display = "block";
+  box.textContent = lines.map(s=>"• " + s).join("\n");
+}
+
+/* =========================
+   마취: 코드별 입력 + 행위명 표시 + 조건판정 + 표 자동 반영
+   ========================= */
+const ANES = [
+  { code:"L1211", label:"L1211 횟수", name:"기관내 삽관 전신마취 - 마취관리기본(1시간 기준)", roleLabel:"기본(1시간)" },
+  { code:"L1212", label:"L1212 횟수", name:"마스크 전신마취 - 마취관리기본(1시간 기준)", roleLabel:"기본(1시간)" },
+  { code:"L1231", label:"L1231 횟수", name:"기관내 삽관 전신마취 - 마취유지(상급)(1시간 초과 15분당)", roleLabel:"유지(15분)" },
+  { code:"L1221", label:"L1221 횟수", name:"기관내 삽관 전신마취 - 마취유지(일반)(1시간 초과 15분당)", roleLabel:"유지(15분)" },
+  { code:"L1232", label:"L1232 횟수", name:"마스크 전신마취 - 마취유지(상급)(1시간 초과 15분당)", roleLabel:"유지(15분)" },
+  { code:"L1222", label:"L1222 횟수", name:"마스크 전신마취 - 마취유지(일반)(1시간 초과 15분당)", roleLabel:"유지(15분)" }
+];
+const ANES_CODES = new Set(ANES.map(x=>x.code));
+const ANES_CART_ID = "__ANES__";
+
+function isAnesText(s){
+  const k = safeStr(s).replace(/\s+/g,"");
+  return k.includes("마취관리기본") || k.includes("마취유지") || k.includes("전신마취") || k.includes("마취");
+}
+
+/*
+  사용자 예시 기준:
+  - 3시간 이상: 기본 1회 + 유지 8회 이상 (15분 * 8 = 2시간)
+  - 6시간 이상: 기본 1회 + 유지 20회 이상 (15분 * 20 = 5시간)
+  삽관 트랙(1211 + 1231/1221) 또는 마스크 트랙(1212 + 1232/1222) 중 하나라도 충족하면 OK
+*/
+function analyzeAnesQty(qtyMap){
+  const q = (code)=>Math.max(0, Math.floor(Number(qtyMap[code] || 0)));
+
+  const baseIntub = q("L1211");
+  const baseMask  = q("L1212");
+  const addIntub  = q("L1231") + q("L1221");
+  const addMask   = q("L1232") + q("L1222");
+
+  const anyBase = (baseIntub + baseMask) > 0;
+  const anyAdd  = (addIntub + addMask) > 0;
+
+  const ok3_intub = (baseIntub >= 1) && (addIntub >= 8);
+  const ok6_intub = (baseIntub >= 1) && (addIntub >= 20);
+
+  const ok3_mask = (baseMask >= 1) && (addMask >= 8);
+  const ok6_mask = (baseMask >= 1) && (addMask >= 20);
+
+  const ok6 = ok6_intub || ok6_mask;
+  const ok3 = ok6 ? true : (ok3_intub || ok3_mask);
+
+  let track = "";
+  if(ok6_intub || ok3_intub) track = "삽관";
+  else if(ok6_mask || ok3_mask) track = "마스크";
+
+  let reason = "";
+  if(!anyBase && anyAdd){
+    reason = "유지(15분) 코드는 있는데 기본(1시간) 코드가 없어 시간 판단이 어려워 0원 처리";
+  } else if(!ok3 && !ok6){
+    reason = "내역서 입력 횟수 기준으로 3시간 이상 조건 미충족이라 0원 처리";
+  } else {
+    reason = ok6 ? "6시간 이상 조건 충족" : "3시간 이상 조건 충족";
+    if(track) reason += " (판정 트랙: " + track + ")";
+  }
+
+  return { baseIntub, baseMask, addIntub, addMask, ok3, ok6, track, reason };
+}
 
 /* =========================
    데이터 파싱
@@ -3756,7 +3939,6 @@ function parseTreatTable(text){
     const obj = {};
     for(let c=0;c<headers.length;c++) obj[headers[c]] = (cols[c]===undefined ? "" : cols[c]).trim();
 
-    // 의료행위(F=5), 수가코드(G=6) 고정
     if(cols.length > 5) obj["의료행위"] = safeStr(cols[5]).trim();
     if(cols.length > 6) obj["수가코드(분류번호)"] = safeStr(cols[6]).trim();
 
@@ -3766,7 +3948,7 @@ function parseTreatTable(text){
   return { rows, headers, errors };
 }
 
-/* 종수술비표 파서: 헤더 자동 스킵 + 컬럼 탐지 + 탭/콤마 대응 */
+/* 종수술비표 파서 */
 function parseSurgMap(text){
   const lines = splitLines(text);
   const rows = [];
@@ -3804,16 +3986,13 @@ function parseSurgMap(text){
 
     const name = safeStr(cols[nameIdx]).trim();
     const kindRaw = (cols.length > kindIdx) ? safeStr(cols[kindIdx]).trim() : "";
-
     if(!name) continue;
 
-    // "2"도 허용
     let kind = kindRaw;
     const mNum = kindRaw.match(/^([1-5])$/);
     if(mNum) kind = mNum[1] + "종";
 
     if(!/^[1-5]종$/.test(kind)) continue;
-
     rows.push({ name, kind });
   }
 
@@ -3823,12 +4002,10 @@ function parseSurgMap(text){
 function normMajor(s){ return safeStr(s).replace(/\s+/g,"").trim(); }
 function normBenefitItem(s){ return safeStr(s).replace(/\s+/g,"").trim(); }
 
-// 종수술 라인은 "보장항목"만으로 판정
 function isKindPayRow(r){
   const item = normBenefitItem(r["보장항목"]);
   return /^(상해|질병)[1-5]종수술$/.test(item);
 }
-
 function findPlanCol(headers, plan){
   if(plan==="미가입") return "";
   return headers.find(h=>safeStr(h).includes(plan)) || "";
@@ -3841,7 +4018,6 @@ function isIncludeInBenefitItem(r){
 function parseInputText(s){
   const txt = safeStr(s).trim();
 
-  // "라벨 [코드]"
   const m = txt.match(/\[([^\]]+)\]\s*$/);
   if(m){
     const code = m[1].trim().replace(/\(분류번호\)/g,"").trim();
@@ -3849,7 +4025,6 @@ function parseInputText(s){
     return { label, code };
   }
 
-  // "라벨 코드"
   const m2 = txt.match(/^(.*?)[\s/]+([A-Za-z0-9._-]{2,20})\s*$/);
   if(m2){
     const label = m2[1].trim();
@@ -3858,7 +4033,6 @@ function parseInputText(s){
     return { label, code };
   }
 
-  // 코드만
   const codeOnly = txt.replace(/\(분류번호\)/g,"").trim();
   if(/^[A-Za-z0-9._-]{2,20}$/.test(codeOnly)){
     return { label:"", code: codeOnly };
@@ -3901,6 +4075,9 @@ function rebuildPool(){
     const inc = isIncludeInBenefitItem(r) ? "상해 포함" : "";
     const meta = [major, gubun, detail, inc].filter(Boolean).join(" / ");
 
+    // 메인 검색 풀에서 마취 완전 제거
+    if(ANES_CODES.has(code) || isAnesText(proc) || isAnesText(item)) continue;
+
     if(proc){
       pool.push({
         type:"treat",
@@ -3939,13 +4116,8 @@ function rebuildPool(){
 
 /* =========================
    지급방식(한도/횟수) 그룹 처리
-   - 사용자 제공 지급방식 기준:
-     연간1회한, 사고당, 수술1회당, 치료1회당,
-     연간15회한(1일1회한), 연간3회한(1일1회한), 부위별 각각 연간1회한
    ========================= */
-function compact(s){
-  return safeStr(s).replace(/\s+/g, "").trim();
-}
+function compact(s){ return safeStr(s).replace(/\s+/g, "").trim(); }
 
 function isLimitPayWay(payWayRaw){
   const p = compact(payWayRaw);
@@ -4025,8 +4197,6 @@ function getLimitLabel(row){
 /* =========================
    매칭 및 계산
    ========================= */
-
-// "라벨 (2종)" 같은 입력에서 (n종) 떼기
 function stripTrailingKind(label){
   const s = safeStr(label).trim();
   const m = s.match(/^(.*)\(\s*([1-5])종\s*\)\s*$/);
@@ -4050,6 +4220,7 @@ function findSurgKindByName(name){
   if(best && best.sc >= 240) return { found:true, kind: best.r.kind, matched: best.r.name, fuzzy:true };
   return { found:false, kind:"" };
 }
+
 function kindNum(kind){
   const m = safeStr(kind).match(/^([1-5])종$/);
   return m ? Number(m[1]) : null;
@@ -4139,7 +4310,6 @@ function calcOne(inputText){
   let limitLabelInj = "";
   let limitLabelDis = "";
 
-  // 수술 매칭 (라벨에 (n종) 붙어도 떼고 매칭)
   if(label){
     const st = stripTrailingKind(label);
     const baseName = st.base;
@@ -4156,7 +4326,6 @@ function calcOne(inputText){
                limitKeyInj:"", limitKeyDis:"", limitLabelInj:"", limitLabelDis:"" };
     }
 
-    // treat 매칭에서는 (n종) 제거한 baseName이 안전
     label = baseName;
     finalLabel = label || finalLabel;
   }
@@ -4222,6 +4391,153 @@ function applyCauseGate(item){
   };
 }
 
+/* =========================
+   마취 입력 UI 생성 + CART 반영
+   ========================= */
+function renderAnesInputs(){
+  const grid = $("#anesGrid");
+  grid.innerHTML = "";
+
+  for(const a of ANES){
+    const div = document.createElement("div");
+    div.className = "anesItem";
+    div.innerHTML = `
+      <div class="anesHeader">
+        <div>
+          <div class="anesCode">${escapeHtml(a.label)}</div>
+          <div class="anesName">${escapeHtml(a.name)}</div>
+        </div>
+        <div class="anesRole">${escapeHtml(a.roleLabel)}</div>
+      </div>
+      <input id="q${escapeHtml(a.code)}" type="number" min="0" value="0" inputmode="numeric" />
+    `;
+    grid.appendChild(div);
+
+    const input = div.querySelector("input");
+    input.addEventListener("input", ()=> upsertAnesCart());
+  }
+}
+
+function pickPayByDetail(domain, whichDetail){
+  const plan = (domain==="injury") ? $("#planInj").value : $("#planDis").value;
+  const planCol = findPlanCol(TREAT_HEADERS, plan);
+  if(!planCol) return 0;
+
+  const majorNeed = (domain==="injury") ? "상해통합치료비" : "질병통합치료비";
+
+  // detail이 동일한 마취 라인 중 아무거나 1개를 대표로 사용
+  const row = TREAT.find(r=>{
+    const major = safeStr(r["대분류"]).trim();
+    const detail = safeStr(r["보장세부"]).trim();
+    const item = safeStr(r["보장항목"]).trim();
+    const proc = safeStr(r["의료행위"]).trim();
+    const code = safeStr(r["수가코드(분류번호)"]).trim();
+    if(!major.startsWith(majorNeed)) return false;
+    if(detail !== whichDetail) return false;
+    return ANES_CODES.has(code) || isAnesText(proc) || isAnesText(item);
+  });
+
+  if(!row) return 0;
+  return parseMoneyToWon(row[planCol]);
+}
+
+function getAnesQtyMap(){
+  const qtyMap = {};
+  for(const a of ANES){
+    const el = $("#q"+a.code);
+    const n = Math.max(0, Math.floor(Number(el ? el.value : 0)));
+    qtyMap[a.code] = Number.isFinite(n) ? n : 0;
+  }
+  return qtyMap;
+}
+
+function upsertAnesCart(){
+  const on = $("#chkAnes").checked;
+
+  if(!on){
+    CART = CART.filter(x=>x.id !== ANES_CART_ID);
+    renderCart();
+    return;
+  }
+
+  const qtyMap = getAnesQtyMap();
+  const totalQty = Object.values(qtyMap).reduce((s,v)=>s+v,0);
+
+  // 입력이 모두 0이면 표 반영도 제거
+  if(totalQty <= 0){
+    CART = CART.filter(x=>x.id !== ANES_CART_ID);
+    renderCart();
+    return;
+  }
+
+  const st = analyzeAnesQty(qtyMap);
+
+  let injPay = 0;
+  let disPay = 0;
+  let title = "마취(내역서 코드 기준)";
+  let reason = st.reason || "";
+
+  if(st.ok6){
+    title += " - 6시간 이상";
+    injPay = pickPayByDetail("injury","6시간 이상");
+    disPay = pickPayByDetail("disease","6시간 이상");
+  } else if(st.ok3){
+    title += " - 3시간 이상";
+    injPay = pickPayByDetail("injury","3시간 이상");
+    // 현재 데이터 구조상 질병은 6시간만 있으니 0원 + 사유 명확히
+    disPay = 0;
+    reason = "3시간 이상은 충족했지만, 질병통합치료비는 6시간 이상만 해당되어 0원 처리";
+  } else {
+    title += " - 조건 미충족";
+    injPay = 0;
+    disPay = 0;
+  }
+
+  const qtyText = ANES
+    .map(a=>({code:a.code, q: qtyMap[a.code]}))
+    .filter(x=>x.q>0)
+    .map(x=>`${x.code} ${x.q}회`)
+    .join(", ");
+
+  let label = title;
+  if(qtyText) label += ` (입력: ${qtyText})`;
+  if(reason) label += ` - ${reason}`;
+
+  const item = {
+    id: ANES_CART_ID,
+    inputText: "__ANES__",
+    label,
+    code: "ANES",
+    injPay,
+    disPay,
+    crossOk:false,
+    ambiguous:false,
+    limitKeyInj:"",
+    limitKeyDis:"",
+    limitLabelInj:"",
+    limitLabelDis:"",
+    isAnes:true
+  };
+
+  const idx = CART.findIndex(x=>x.id === ANES_CART_ID);
+  if(idx >= 0) CART[idx] = item;
+  else CART.unshift(item); // 마취는 표 위쪽에 보이게
+
+  renderCart();
+}
+
+function resetAnesInputs(){
+  for(const a of ANES){
+    const el = $("#q"+a.code);
+    if(el) el.value = 0;
+  }
+  upsertAnesCart();
+  showAnesWarn([]);
+}
+
+/* =========================
+   렌더
+   ========================= */
 function renderCart(){
   const tb = $("#cartBody");
   tb.innerHTML = "";
@@ -4229,7 +4545,6 @@ function renderCart(){
   let sumInj=0, sumDis=0;
   const warns = [];
 
-  // 지급방식 한도 그룹: 첫 건만 지급, 이후 0원 표시
   const usedInj = new Set();
   const usedDis = new Set();
 
@@ -4238,7 +4553,6 @@ function renderCart(){
 
     let suffix = "";
 
-    // 상해: 같은 limitKeyInj 두 번째부터 0원
     if(g.inj > 0 && it.limitKeyInj){
       if(usedInj.has(it.limitKeyInj)){
         g = { ...g, inj: 0 };
@@ -4248,7 +4562,6 @@ function renderCart(){
       }
     }
 
-    // 질병: 같은 limitKeyDis 두 번째부터 0원
     if(g.dis > 0 && it.limitKeyDis){
       if(usedDis.has(it.limitKeyDis)){
         g = { ...g, dis: 0 };
@@ -4262,12 +4575,17 @@ function renderCart(){
     sumDis += g.dis;
 
     const tr = document.createElement("tr");
+    const isAnes = it.id === ANES_CART_ID;
+
     tr.innerHTML = `
       <td>${escapeHtml(it.label + suffix)}${it.ambiguous ? ' (코드 중복 의심)' : ''}</td>
       <td class="mono">${escapeHtml(it.code || "-")}</td>
       <td class="mono">${fmtWon(g.inj)}</td>
       <td class="mono">${fmtWon(g.dis)}</td>
-      <td><button class="danger" data-del="${it.id}" style="padding:8px 10px; border-radius:12px;">삭제</button></td>
+      <td>
+        ${isAnes ? `<button class="danger" data-anes-del="1" style="padding:8px 10px; border-radius:12px;" type="button">삭제</button>`
+                 : `<button class="danger" data-del="${it.id}" style="padding:8px 10px; border-radius:12px;" type="button">삭제</button>`}
+      </td>
     `;
     tb.appendChild(tr);
 
@@ -4289,6 +4607,17 @@ function renderCart(){
     btn.addEventListener("click", ()=>{
       const id = btn.getAttribute("data-del");
       CART = CART.filter(x=>x.id!==id);
+      renderCart();
+    });
+  });
+
+  tb.querySelectorAll("button[data-anes-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      // 마취 행 삭제는: 체크 해제 + 입력 초기화 + 행 제거
+      $("#chkAnes").checked = false;
+      $("#anesPanel").classList.remove("on");
+      resetAnesInputs();
+      CART = CART.filter(x=>x.id !== ANES_CART_ID);
       renderCart();
     });
   });
@@ -4344,6 +4673,18 @@ function addSelected(){
   const inputText = safeStr($("#query").value).trim();
   if(!inputText) return;
 
+  // 메인에서 마취 코드/텍스트 완전 차단 (실수 방지)
+  const p = parseInputText(inputText);
+  const code = safeStr(p.code).trim();
+  const label = safeStr(p.label).trim();
+  if(ANES_CODES.has(code) || isAnesText(label) || isAnesText(inputText)){
+    showWarn([
+      "마취 항목(L1211, L1212, L1231, L1221, L1232, L1222)은 여기서 추가하지 않습니다.",
+      "상단의 '마취 코드가 내역서에 있어요'를 체크해서 마취 입력칸에서 횟수만 입력해 주세요."
+    ]);
+    return;
+  }
+
   const c = calcOne(inputText);
   const id = String(Date.now()) + "_" + Math.random().toString(16).slice(2);
 
@@ -4365,8 +4706,13 @@ function addSelected(){
   $("#query").value = "";
   renderCart();
 }
+
 function recalcAll(){
+  // 마취 행도 같이 재계산(플랜 바뀌면 금액 바뀜)
+  upsertAnesCart();
+
   CART = CART.map(it=>{
+    if(it.id === ANES_CART_ID) return it;
     const c = calcOne(it.inputText);
     return {
       ...it,
@@ -4389,6 +4735,8 @@ $("#btnAdd").addEventListener("click", addSelected);
 $("#btnClear").addEventListener("click", ()=>{
   CART = [];
   showWarn([]);
+  // 마취는 체크 상태면 다시 upsert 하게 두기
+  upsertAnesCart();
   renderCart();
 });
 $("#btnCalc").addEventListener("click", ()=>{
@@ -4418,6 +4766,29 @@ $("#query").addEventListener("focus", (e)=>{ showAutocomplete(e.target.value); }
 $("#query").addEventListener("blur", ()=>{ setTimeout(hideAutocomplete, 120); });
 
 /* =========================
+   마취 섹션 토글
+   ========================= */
+function setAnesPanel(open){
+  $("#anesPanel").classList.toggle("on", !!open);
+}
+$("#chkAnes").addEventListener("change", (e)=>{
+  const on = e.target.checked;
+  setAnesPanel(on);
+  upsertAnesCart();
+});
+
+$("#btnAnesOpen").addEventListener("click", ()=>{
+  $("#chkAnes").checked = true;
+  setAnesPanel(true);
+  upsertAnesCart();
+});
+$("#btnAnesReset").addEventListener("click", ()=>{
+  $("#chkAnes").checked = true;
+  setAnesPanel(true);
+  resetAnesInputs();
+});
+
+/* =========================
    초기 부팅
    ========================= */
 (function boot(){
@@ -4429,9 +4800,11 @@ $("#query").addEventListener("blur", ()=>{ setTimeout(hideAutocomplete, 120); })
   SURG = s.rows;
 
   rebuildPool();
+  renderAnesInputs();
 
   const errs = [...t.errors, ...s.errors].filter(Boolean);
   if(errs.length) showWarn(errs);
+
   renderCart();
 })();
 </script>
