@@ -4398,7 +4398,10 @@ function renderAnesInputs(){
   const grid = $("#anesGrid");
   grid.innerHTML = "";
 
-  for(const a of ANES){
+  // 수가코드(code) 오름차순 정렬 후 렌더
+  const anesSorted = [...ANES].sort((a,b)=> a.code.localeCompare(b.code, "en"));
+
+  for(const a of anesSorted){
     const div = document.createElement("div");
     div.className = "anesItem";
     div.innerHTML = `
@@ -4413,8 +4416,7 @@ function renderAnesInputs(){
     `;
     grid.appendChild(div);
 
-    const input = div.querySelector("input");
-    input.addEventListener("input", ()=> upsertAnesCart());
+    div.querySelector("input").addEventListener("input", ()=> upsertAnesCart());
   }
 }
 
