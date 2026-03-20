@@ -230,7 +230,7 @@
 
         <div id="anesPanel" class="anesPanel">
           <div class="anesHint">
-            내역서 횟수 기반 추정 규칙: 기본(1시간) 1회 + 유지(15분) 8회면 3시간 이상, 기본 1회 + 유지 20회면 6시간 이상으로 표기합니다.
+            내역서 횟수 기반 추정 규칙: 기본(1시간) 1회 + 유지(15분) 8회면 3시간 이상, 기본 1회 + 유지 16회면 6시간 이상으로 표기합니다.
             조건이 안 맞으면 0원으로 표시하고 사유를 표에 같이 적습니다.
           </div>
 
@@ -3899,10 +3899,10 @@ function analyzeAnesQty(qtyMap){
   const anyAdd  = (addIntub + addMask) > 0;
 
   const ok3_intub = (baseIntub >= 1) && (addIntub >= 8);
-  const ok6_intub = (baseIntub >= 1) && (addIntub >= 20);
+  const ok6_intub = (baseIntub >= 1) && (addIntub >= 16);
 
   const ok3_mask = (baseMask >= 1) && (addMask >= 8);
-  const ok6_mask = (baseMask >= 1) && (addMask >= 20);
+  const ok6_mask = (baseMask >= 1) && (addMask >= 16);
 
   const ok6 = ok6_intub || ok6_mask;
   const ok3 = ok6 ? true : (ok3_intub || ok3_mask);
