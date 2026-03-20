@@ -234,15 +234,15 @@
             조건이 안 맞으면 0원으로 표시하고 사유를 표에 같이 적습니다.
           </div>
 
+          <div class="anesGrid" id="anesGrid"></div>
+          <div class="warn" id="anesWarnBox"></div>
+
           <!-- 마취 계산 적용 버튼 -->
           <div class="row" style="margin-top:10px;">
             <div class="col xs" style="min-width:220px;">
               <button class="good" id="btnAnesApply" type="button">마취 계산 적용</button>
             </div>
           </div>
-
-          <div class="anesGrid" id="anesGrid"></div>
-          <div class="warn" id="anesWarnBox"></div>
         </div>
       </div>
 
@@ -4514,19 +4514,22 @@ function upsertAnesCart(){
   if(reason) label += ` - ${reason}`;
 
   const item = {
-    id: ANES_CART_ID,
-    inputText: "__ANES__",
-    label,
-    code: "ANES",
-    injPay,
-    disPay,
-    crossOk:false,
-    ambiguous:false,
-    limitKeyInj:"",
-    limitKeyDis:"",
-    limitLabelInj:"",
-    limitLabelDis:"",
-    isAnes:true
+  id: ANES_CART_ID,
+  inputText: "__ANES__",
+  label,
+  code: "ANES",
+  injPay,
+  disPay,
+
+  // 핵심: 원인이 상해여도 "6시간 이상"이면 질병통합치료비도 같이 반영되게 게이트 통과
+  crossOk: st.ok6,
+
+  ambiguous:false,
+  limitKeyInj:"",
+  limitKeyDis:"",
+  limitLabelInj:"",
+  limitLabelDis:"",
+  isAnes:true
   };
 
   const idx = CART.findIndex(x=>x.id === ANES_CART_ID);
